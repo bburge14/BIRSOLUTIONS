@@ -536,6 +536,23 @@
   .form-success svg { flex-shrink: 0; width: 22px; height: 22px; stroke: #1f7a3d; margin-top: 2px; }
   .form-success strong { display: block; margin-bottom: 2px; color: #145c2c; }
 
+  /* Generic submission error (hidden until JS reveals it on a failed send) */
+  .form-error {
+    display: none;
+    align-items: flex-start;
+    gap: 14px;
+    background: #fff5f6;
+    border: 1px solid #f3b8bf;
+    color: #9c0c23;
+    border-radius: var(--radius-md);
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    font-size: 0.92rem;
+  }
+  .form-error.is-visible { display: flex; }
+  .form-error svg { flex-shrink: 0; width: 22px; height: 22px; stroke: #9c0c23; margin-top: 2px; }
+  .form-error strong { display: block; margin-bottom: 2px; color: #7a0a1c; }
+
   .service-form.is-hidden { display: none; }
 
   /* ==========================================================================
@@ -840,7 +857,27 @@
             </div>
           </div>
 
+          <!-- Generic submission error (network / API failure), shown by JS -->
+          <div class="form-error" id="formError">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div>
+              <strong>Something went wrong.</strong>
+              Your request wasn't sent. Try again, or reach out directly using the contact info below.
+            </div>
+          </div>
+
           <form id="serviceForm" class="service-form" novalidate>
+
+            <!-- Web3Forms delivery config -->
+            <input type="hidden" name="access_key" value="e1555619-8aff-4b93-9967-34386beb0b62" />
+            <input type="hidden" name="subject" value="New service request from birsolutions.net" />
+            <input type="hidden" name="from_name" value="Burge Infrastructure & Repair site" />
+            <!-- Honeypot spam trap: real visitors never fill this in -->
+            <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
             <div class="form-row">
               <div class="form-group" id="group-name">
@@ -969,9 +1006,10 @@
       });
     });
 
-    /* ---- Service Request Form: validation + simulated submission ---- */
+    /* ---- Service Request Form: validation + submission ---- */
     var form = document.getElementById('serviceForm');
     var successBox = document.getElementById('formSuccess');
+    var errorBox = document.getElementById('formError');
 
     var validators = {
       fullName: function (value) {
@@ -1035,33 +1073,35 @@
         return;
       }
 
-      /* --------------------------------------------------------------------
-         Simulated submission. To connect a real backend:
-         replace this block with a fetch()/XHR call to your API endpoint,
-         e.g.:
-           fetch('/api/service-request', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify(Object.fromEntries(new FormData(form)))
-           })
-         Keep the success/reset logic below inside the .then() handler.
-         -------------------------------------------------------------------- */
+      errorBox.classList.remove('is-visible');
       var submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
-      setTimeout(function () {
-        form.reset();
-        fields.forEach(function (name) { setFieldError(name, false); });
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form)))
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data.success) throw new Error(data.message || 'Submission failed');
 
-        form.classList.add('is-hidden');
-        successBox.classList.add('is-visible');
+          form.reset();
+          fields.forEach(function (name) { setFieldError(name, false); });
 
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit Service Request';
-
-        successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 900);
+          form.classList.add('is-hidden');
+          successBox.classList.add('is-visible');
+          successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        })
+        .catch(function () {
+          errorBox.classList.add('is-visible');
+          errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        })
+        .finally(function () {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Request';
+        });
     });
 
   })();
