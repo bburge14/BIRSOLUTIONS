@@ -962,7 +962,7 @@
         <div class="footer-col">
           <h5>Contact</h5>
           <ul>
-            <li><a href="mailto:contact@burgeinfrastructure.com">contact@burgeinfrastructure.com</a></li>
+            <li><a href="mailto:contact@birsolutions.net">contact@birsolutions.net</a></li>
             <li><a href="tel:+10000000000">(000) 000-0000</a></li>
             <li>Serving SMB &amp; Residential Clients</li>
           </ul>
@@ -977,12 +977,18 @@
     </div>
   </footer>
 
+  <!-- EmailJS: sends the customer-facing auto-reply from noreply@birsolutions.net -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
   /* ==========================================================================
      VANILLA JS: NAVIGATION, SMOOTH SCROLL, FORM VALIDATION & SUBMISSION
      ========================================================================== */
   (function () {
     'use strict';
+
+    if (window.emailjs) {
+      emailjs.init({ publicKey: 'YOUR_EMAILJS_PUBLIC_KEY' });
+    }
 
     /* ---- Footer year ---- */
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -1078,14 +1084,27 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
+      var formValues = Object.fromEntries(new FormData(form));
+
       fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(Object.fromEntries(new FormData(form)))
+        body: JSON.stringify(formValues)
       })
         .then(function (res) { return res.json(); })
         .then(function (data) {
           if (!data.success) throw new Error(data.message || 'Submission failed');
+
+          /* Customer auto-reply via EmailJS. Best-effort: the request to
+             contact@birsolutions.net already succeeded above, so a failure
+             here should not block the visitor's success confirmation. */
+          if (window.emailjs) {
+            emailjs.send('YOUR_EMAILJS_SERVICE_ID', 'YOUR_EMAILJS_TEMPLATE_ID', {
+              to_email: formValues.email,
+              to_name: formValues.fullName,
+              category: formValues.category
+            }).catch(function (err) { console.warn('Auto-reply email failed to send:', err); });
+          }
 
           form.reset();
           fields.forEach(function (name) { setFieldError(name, false); });
