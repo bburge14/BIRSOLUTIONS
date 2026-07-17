@@ -1099,10 +1099,12 @@
              contact@birsolutions.net already succeeded above, so a failure
              here should not block the visitor's success confirmation. */
           if (window.emailjs) {
+            var categorySelect = form.elements['category'];
+            var categoryLabel = categorySelect.options[categorySelect.selectedIndex].text;
             emailjs.send('YOUR_EMAILJS_SERVICE_ID', 'YOUR_EMAILJS_TEMPLATE_ID', {
               to_email: formValues.email,
               to_name: formValues.fullName,
-              category: formValues.category
+              category_label: categoryLabel
             }).catch(function (err) { console.warn('Auto-reply email failed to send:', err); });
           }
 
