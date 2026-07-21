@@ -1136,10 +1136,10 @@
         .then(function (data) {
           if (!data.success) throw new Error(data.message || 'Submission failed');
 
-          /* Both EmailJS sends below are best-effort: the request to
-             contact@birsolutions.net already succeeded above via Web3Forms,
-             so a failure here should not block the visitor's success
-             confirmation. */
+          /* Customer-facing auto-reply via EmailJS. Best-effort: the request
+             to contact@birsolutions.net already succeeded above via
+             Web3Forms, so a failure here should not block the visitor's
+             success confirmation. */
           if (window.emailjs) {
 
             /* Structured notification for the desktop intake parser. */
