@@ -17,6 +17,7 @@
     --color-navy-800: #0f1d38;
     --color-navy-700: #16294a;
     --color-navy-600: #223a63;
+    --color-navy-input: #111d33;
     --color-crimson: #c8102e;
     --color-crimson-dark: #9c0c23;
     --color-crimson-light: #e8354f;
@@ -458,8 +459,9 @@
   .request-info .section-sub { color: var(--color-gray-200); max-width: 480px; }
 
   .form-card {
-    background: var(--color-white);
-    color: var(--color-gray-800);
+    background: var(--color-navy-900);
+    color: var(--color-white);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-lg);
     padding: 40px;
     box-shadow: var(--shadow-lg);
@@ -475,15 +477,27 @@
   .form-group { margin-bottom: 20px; }
   .form-row .form-group { margin-bottom: 0; }
 
+  .form-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-crimson-light);
+    margin: 32px 0 18px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .form-section-title:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+
   .form-group label {
     display: block;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--color-navy-900);
+    color: var(--color-white);
     margin-bottom: 8px;
     letter-spacing: 0.01em;
   }
-  .form-group .required { color: var(--color-crimson); }
+  .form-group .required { color: var(--color-crimson-light); }
 
   .form-group input,
   .form-group select,
@@ -492,19 +506,23 @@
     padding: 13px 16px;
     font-size: 0.95rem;
     font-family: inherit;
-    color: var(--color-gray-800);
-    background: var(--color-gray-50);
-    border: 1.5px solid var(--color-gray-200);
+    color: var(--color-white);
+    background: var(--color-navy-input);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-sm);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: var(--color-gray-400);
   }
   .form-group input:focus,
   .form-group select:focus,
   .form-group textarea:focus {
     outline: none;
-    border-color: var(--color-navy-600);
-    background: var(--color-white);
-    box-shadow: 0 0 0 4px rgba(22, 41, 74, 0.1);
+    border-color: var(--color-crimson);
+    background: var(--color-navy-800);
+    box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.15);
   }
 
   .form-group textarea { resize: vertical; min-height: 120px; }
@@ -513,8 +531,30 @@
   .form-group.has-error select,
   .form-group.has-error textarea {
     border-color: var(--color-crimson);
-    background: #fff5f6;
+    background: rgba(200, 16, 46, 0.1);
   }
+
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 2px 0;
+  }
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
+    color: var(--color-gray-200);
+    cursor: pointer;
+  }
+  .radio-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--color-crimson);
+  }
+  .form-group.has-error .radio-option span { color: var(--color-crimson-light); }
 
   .field-error {
     display: none;
@@ -908,12 +948,14 @@
 
           <form id="serviceForm" class="service-form" novalidate>
 
-            <!-- Web3Forms delivery config -->
+            <!-- Web3Forms delivery config (redundant fallback alongside the EmailJS intake notification) -->
             <input type="hidden" name="access_key" value="e1555619-8aff-4b93-9967-34386beb0b62" />
-            <input type="hidden" name="subject" value="New service request from birsolutions.net" />
+            <input type="hidden" name="subject" value="New client intake from birsolutions.net" />
             <input type="hidden" name="from_name" value="Burge Infrastructure & Repair site" />
             <!-- Honeypot spam trap: real visitors never fill this in -->
             <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
+
+            <h3 class="form-section-title">Client Details</h3>
 
             <div class="form-row">
               <div class="form-group" id="group-name">
@@ -936,23 +978,74 @@
                 <span class="field-error">Please enter a valid phone number.</span>
               </div>
 
-              <div class="form-group" id="group-category">
-                <label for="category">Service Type <span class="required">*</span></label>
-                <select id="category" name="category">
-                  <option value="" disabled selected>Choose one</option>
-                  <option value="hardware-diagnostics-repair">Hardware Diagnostics &amp; Repair</option>
-                  <option value="infrastructure-design-building">Infrastructure Design &amp; Building</option>
-                  <option value="custom-pc-sourcing-assembly">Custom PC Sourcing &amp; Assembly</option>
-                  <option value="other">Other</option>
-                </select>
-                <span class="field-error">Please select a service category.</span>
+              <div class="form-group" id="group-address">
+                <label for="address">Service / Site Address</label>
+                <input type="text" id="address" name="address" placeholder="123 Main St, Anytown" autocomplete="street-address" />
               </div>
             </div>
 
-            <div class="form-group" id="group-details">
-              <label for="details">Details <span class="required">*</span></label>
-              <textarea id="details" name="details" placeholder="What do you need help with?"></textarea>
-              <span class="field-error">Please provide at least 20 characters describing your needs.</span>
+            <h3 class="form-section-title">Service &amp; Job Type</h3>
+
+            <div class="form-group" id="group-serviceNeeded">
+              <label for="serviceNeeded">Service Needed <span class="required">*</span></label>
+              <select id="serviceNeeded" name="serviceNeeded">
+                <option value="" disabled selected>Choose one</option>
+                <option value="Custom PC Build &amp; Assembly">Custom PC Build &amp; Assembly</option>
+                <option value="PC &amp; Workstation Repair / Diagnostics">PC &amp; Workstation Repair / Diagnostics</option>
+                <option value="Network Infrastructure Services">Network Infrastructure Services</option>
+                <option value="On-Site Tech Support">On-Site Tech Support</option>
+              </select>
+              <span class="field-error">Please select the service needed.</span>
+            </div>
+
+            <div class="form-group" id="group-clientType">
+              <label>Client Relationship <span class="required">*</span></label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="clientType" value="New Client (First Time Service)" />
+                  <span>New Client (First Time Service)</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="clientType" value="Returning Client" />
+                  <span>Returning Client</span>
+                </label>
+              </div>
+              <span class="field-error">Please select one.</span>
+            </div>
+
+            <div class="form-group" id="group-sourcingModel">
+              <label>Sourcing Model <span class="required">*</span></label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="sourcingModel" value="Option A: Provider Sourced (50% Deposit, Turnkey)" />
+                  <span>Option A: Provider Sourced (50% Deposit, Turnkey)</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="sourcingModel" value="Option B: Client Sourced (Labor Only)" />
+                  <span>Option B: Client Sourced (Labor Only)</span>
+                </label>
+              </div>
+              <span class="field-error">Please select a sourcing model.</span>
+            </div>
+
+            <h3 class="form-section-title">Technical &amp; Hardware Scope</h3>
+
+            <div class="form-row">
+              <div class="form-group" id="group-device">
+                <label for="device">Device Brand / Model / Case Specs</label>
+                <input type="text" id="device" name="device" placeholder="e.g. Dell OptiPlex 7090" />
+              </div>
+
+              <div class="form-group" id="group-serial">
+                <label for="serial">Serial Number / Service Tag</label>
+                <input type="text" id="serial" name="serial" placeholder="Optional" />
+              </div>
+            </div>
+
+            <div class="form-group" id="group-symptoms">
+              <label for="symptoms">Reported Faults / Symptoms / Desired Build Scope <span class="required">*</span></label>
+              <textarea id="symptoms" name="symptoms" placeholder="Describe what's happening, or what you want built"></textarea>
+              <span class="field-error">Please provide at least 20 characters describing the issue or scope.</span>
             </div>
 
             <div class="form-submit">
@@ -1064,10 +1157,16 @@
         var digits = value.replace(/\D/g, '');
         return digits.length >= 10;
       },
-      category: function (value) {
+      serviceNeeded: function (value) {
         return value.trim().length > 0;
       },
-      details: function (value) {
+      clientType: function (value) {
+        return value.trim().length > 0;
+      },
+      sourcingModel: function (value) {
+        return value.trim().length > 0;
+      },
+      symptoms: function (value) {
         return value.trim().length >= 20;
       }
     };
@@ -1087,6 +1186,18 @@
     Object.keys(validators).forEach(function (name) {
       var field = form.elements[name];
       if (!field) return;
+
+      /* Radio groups resolve to a RadioNodeList, which has no addEventListener
+         of its own, so each radio in the group needs its own listener. */
+      if (field instanceof RadioNodeList) {
+        Array.prototype.forEach.call(field, function (radio) {
+          radio.addEventListener('change', function () {
+            validateField(name, field.value);
+          });
+        });
+        return;
+      }
+
       var eventType = (field.tagName === 'SELECT') ? 'change' : 'input';
       field.addEventListener(eventType, function () {
         validateField(name, field.value);
@@ -1099,7 +1210,7 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      var fields = ['fullName', 'email', 'phone', 'category', 'details'];
+      var fields = ['fullName', 'email', 'phone', 'serviceNeeded', 'clientType', 'sourcingModel', 'symptoms'];
       var allValid = true;
 
       fields.forEach(function (name) {
@@ -1122,6 +1233,10 @@
 
       var formValues = Object.fromEntries(new FormData(form));
 
+      /* Subject format required by the desktop intake parser:
+         "NEW INTAKE SUBMISSION - [Client Name] - [Service Needed]" */
+      formValues.subject = 'NEW INTAKE SUBMISSION - ' + formValues.fullName + ' - ' + formValues.serviceNeeded;
+
       fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -1131,16 +1246,31 @@
         .then(function (data) {
           if (!data.success) throw new Error(data.message || 'Submission failed');
 
-          /* Customer auto-reply via EmailJS. Best-effort: the request to
-             contact@birsolutions.net already succeeded above, so a failure
-             here should not block the visitor's success confirmation. */
+          /* Both EmailJS sends below are best-effort: the request to
+             contact@birsolutions.net already succeeded above via Web3Forms,
+             so a failure here should not block the visitor's success
+             confirmation. */
           if (window.emailjs) {
-            var categorySelect = form.elements['category'];
-            var categoryLabel = categorySelect.options[categorySelect.selectedIndex].text;
+
+            /* Structured notification for the desktop intake parser. */
+            emailjs.send('service_yzcmxwv', 'YOUR_EMAILJS_INTAKE_TEMPLATE_ID', {
+              name_field: formValues.fullName,
+              phone_field: formValues.phone,
+              email_field: formValues.email,
+              address_field: formValues.address || 'Not provided',
+              service_field: formValues.serviceNeeded,
+              client_type_field: formValues.clientType,
+              sourcing_field: formValues.sourcingModel,
+              device_field: formValues.device || 'Not provided',
+              serial_field: formValues.serial || 'Not provided',
+              symptoms_field: formValues.symptoms
+            }).catch(function (err) { console.warn('Intake notification email failed to send:', err); });
+
+            /* Customer-facing auto-reply. */
             emailjs.send('service_yzcmxwv', 'template_q0gxgcu', {
               to_email: formValues.email,
               to_name: formValues.fullName,
-              category_label: categoryLabel
+              category_label: formValues.serviceNeeded
             }).catch(function (err) { console.warn('Auto-reply email failed to send:', err); });
           }
 
