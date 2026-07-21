@@ -17,9 +17,6 @@
     --color-navy-800: #0f1d38;
     --color-navy-700: #16294a;
     --color-navy-600: #223a63;
-    --color-navy-input: #111d33;
-    --color-navy-border: #1e2d4a;
-    --color-muted: #94a3b8;
     --color-crimson: #c8102e;
     --color-crimson-dark: #9c0c23;
     --color-crimson-light: #e8354f;
@@ -461,9 +458,8 @@
   .request-info .section-sub { color: var(--color-gray-200); max-width: 480px; }
 
   .form-card {
-    background: var(--color-navy-900);
-    color: var(--color-white);
-    border: 1px solid var(--color-navy-border);
+    background: var(--color-white);
+    color: var(--color-gray-800);
     border-radius: var(--radius-lg);
     padding: 40px;
     box-shadow: var(--shadow-lg);
@@ -483,11 +479,11 @@
     display: block;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--color-white);
+    color: var(--color-navy-900);
     margin-bottom: 8px;
     letter-spacing: 0.01em;
   }
-  .form-group .required { color: var(--color-crimson-light); }
+  .form-group .required { color: var(--color-crimson); }
 
   .form-group input,
   .form-group select,
@@ -496,23 +492,19 @@
     padding: 13px 16px;
     font-size: 0.95rem;
     font-family: inherit;
-    color: var(--color-white);
-    background: var(--color-navy-input);
-    border: 1.5px solid var(--color-navy-border);
+    color: var(--color-gray-800);
+    background: var(--color-gray-50);
+    border: 1.5px solid var(--color-gray-200);
     border-radius: var(--radius-sm);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
-  }
-  .form-group input::placeholder,
-  .form-group textarea::placeholder {
-    color: var(--color-muted);
   }
   .form-group input:focus,
   .form-group select:focus,
   .form-group textarea:focus {
     outline: none;
-    border-color: var(--color-crimson);
-    background: var(--color-navy-800);
-    box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.15);
+    border-color: var(--color-navy-600);
+    background: var(--color-white);
+    box-shadow: 0 0 0 4px rgba(22, 41, 74, 0.1);
   }
 
   .form-group textarea { resize: vertical; min-height: 120px; }
@@ -521,7 +513,7 @@
   .form-group.has-error select,
   .form-group.has-error textarea {
     border-color: var(--color-crimson);
-    background: rgba(200, 16, 46, 0.1);
+    background: #fff5f6;
   }
 
   .field-error {
