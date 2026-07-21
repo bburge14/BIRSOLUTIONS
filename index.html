@@ -1136,22 +1136,11 @@
         .then(function (data) {
           if (!data.success) throw new Error(data.message || 'Submission failed');
 
-          /* Both EmailJS sends below are best-effort: the request to
-             contact@birsolutions.net already succeeded above via Web3Forms,
-             so a failure here should not block the visitor's success
-             confirmation. */
+          /* Customer-facing auto-reply via EmailJS. Best-effort: the request
+             to contact@birsolutions.net already succeeded above via
+             Web3Forms, so a failure here should not block the visitor's
+             success confirmation. */
           if (window.emailjs) {
-
-            /* Structured notification for the desktop intake parser. */
-            emailjs.send('service_yzcmxwv', 'YOUR_EMAILJS_INTAKE_TEMPLATE_ID', {
-              name_field: formValues.fullName,
-              email_field: formValues.email,
-              phone_field: formValues.phone,
-              service_field: formValues.service,
-              description_field: formValues.description
-            }).catch(function (err) { console.warn('Intake notification email failed to send:', err); });
-
-            /* Customer-facing auto-reply. */
             emailjs.send('service_yzcmxwv', 'template_q0gxgcu', {
               to_email: formValues.email,
               to_name: formValues.fullName,
