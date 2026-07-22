@@ -67,14 +67,19 @@ export const handler = async (event) => {
 
     const originalSender = record.mail.commonHeaders.from[0];
 
-    // Rewrite From header using a fixed display name for clean inbox
-    // rendering -- SPF/DKIM can only ever pass for a domain we actually
-    // control, never the original sender's, so the forwarded copy has to
-    // claim to be from our own verified address.
+    // Rewrite From, and strip Sender/Return-Path -- SES infers the
+    // sending identity from the raw message's own headers when Source
+    // isn't passed explicitly to SendRawEmail, and any of these three
+    // still pointing at the original (unverified) sender causes a
+    // MessageRejected error, sandbox mode or not (sender verification is
+    // required unconditionally; sandbox mode additionally requires the
+    // recipient to be verified, which is a separate restriction).
     rawEmail = rawEmail.replace(
       /^From: .*/m,
       `From: "${SENDER_NAME}" <${FROM_ADDRESS}>`
     );
+    rawEmail = rawEmail.replace(/^Sender: .*\r?\n/m, "");
+    rawEmail = rawEmail.replace(/^Return-Path: .*\r?\n/m, "");
 
     // Reply-To has to be removed and re-inserted INSIDE the header
     // block, not appended to the end of the whole raw message --
@@ -92,6 +97,7 @@ export const handler = async (event) => {
 
     await ses.send(
       new SendRawEmailCommand({
+        Source: FROM_ADDRESS, // explicit -- don't rely on inference from raw headers
         RawMessage: { Data: Buffer.from(rawEmail) },
         Destinations: [forwardTo],
       })
