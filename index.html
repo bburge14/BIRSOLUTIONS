@@ -908,11 +908,8 @@
 
           <form id="serviceForm" class="service-form" novalidate>
 
-            <!-- Web3Forms delivery config (redundant fallback alongside the EmailJS intake notification) -->
-            <input type="hidden" name="access_key" value="e1555619-8aff-4b93-9967-34386beb0b62" />
-            <input type="hidden" name="subject" value="New lead from birsolutions.net" />
-            <input type="hidden" name="from_name" value="Burge Infrastructure & Repair site" />
-            <!-- Honeypot spam trap: real visitors never fill this in -->
+            <!-- Honeypot spam trap: real visitors never fill this in --
+                 checked client-side before submitting, see below. -->
             <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
 
             <div class="form-row">
@@ -1014,8 +1011,6 @@
     </div>
   </footer>
 
-  <!-- EmailJS: sends the customer-facing auto-reply from noreply@birsolutions.net -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
   /* ==========================================================================
      VANILLA JS: NAVIGATION, SMOOTH SCROLL, FORM VALIDATION & SUBMISSION
@@ -1023,9 +1018,11 @@
   (function () {
     'use strict';
 
-    if (window.emailjs) {
-      emailjs.init({ publicKey: '0fTdqCMh2RKupsbf6' });
-    }
+    /* Contact form backend -- an AWS Lambda behind API Gateway (this site
+       is 100% static/GitHub Pages, can't run server code itself). See
+       lambda/contact-form/README.md for the one-time AWS setup and how to
+       fill this in once deployed. */
+    var CONTACT_API_URL = 'https://YOUR-API-ID.execute-api.YOUR-REGION.amazonaws.com/contact';
 
     /* ---- Footer year ---- */
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -1116,6 +1113,15 @@
         return;
       }
 
+      /* Honeypot: real visitors never fill this in. Silently pretend
+         success instead of telling a bot its submission was rejected. */
+      if (form.elements.botcheck && form.elements.botcheck.checked) {
+        form.reset();
+        form.classList.add('is-hidden');
+        successBox.classList.add('is-visible');
+        return;
+      }
+
       errorBox.classList.remove('is-visible');
       var submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
@@ -1123,42 +1129,28 @@
 
       var formValues = Object.fromEntries(new FormData(form));
 
-      /* Subject format required by the desktop intake parser:
-         "NEW INTAKE - [Service Requested] - [Full Name]" */
-      formValues.subject = 'NEW INTAKE - ' + formValues.service + ' - ' + formValues.fullName;
-
-      fetch('https://api.web3forms.com/submit', {
+      /* Sent straight to our own AWS Lambda (see CONTACT_API_URL above) --
+         it sends via AWS SES directly, no third-party form relay or
+         client-side email service involved. */
+      fetch(CONTACT_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(formValues)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: formValues.fullName,
+          clientEmail: formValues.email,
+          clientPhone: formValues.phone,
+          serviceRequested: formValues.service,
+          issueOverview: formValues.description
+        })
       })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (!data.success) throw new Error(data.message || 'Submission failed');
-
-          /* Customer-facing auto-reply via EmailJS. Best-effort: the request
-             to contact@birsolutions.net already succeeded above via
-             Web3Forms, so a failure here should not block the visitor's
-             success confirmation. */
-          if (window.emailjs) {
-
-            /* Structured notification for the desktop intake parser. */
-            emailjs.send('service_yzcmxwv', 'template_mw8abeq', {
-              name_field: formValues.fullName,
-              email_field: formValues.email,
-              phone_field: formValues.phone,
-              service_field: formValues.service,
-              description_field: formValues.description
-            }).catch(function (err) { console.warn('Intake notification email failed to send:', err); });
-
-            /* Customer-facing auto-reply. */
-            emailjs.send('service_yzcmxwv', 'template_q0gxgcu', {
-              to_email: formValues.email,
-              to_name: formValues.fullName,
-              category_label: formValues.service
-            }).catch(function (err) { console.warn('Auto-reply email failed to send:', err); });
-          }
-
+        .then(function (res) {
+          return res.json().then(function (data) {
+            if (!res.ok || !data.success) {
+              throw new Error(data.message || 'Submission failed');
+            }
+          });
+        })
+        .then(function () {
           form.reset();
           fields.forEach(function (name) { setFieldError(name, false); });
 

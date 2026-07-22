@@ -1,0 +1,10 @@
+{
+  "name": "birsolutions-contact-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda handler for the birsolutions.net contact form -- sends via SES.",
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.600.0"
+  }
+}
