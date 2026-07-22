@@ -122,7 +122,7 @@ export const handler = async (event) => {
 
   try {
     await ses.send(new SendEmailCommand({
-      Source: "BIR Solutions Request <contact@birsolutions.net>",
+      Source: "BIR Solutions Request <request@birsolutions.net>",
       Destination: { ToAddresses: ["contact@birsolutions.net"] },
       ReplyToAddresses: [clientEmail],
       ConfigurationSetName: configSet,
@@ -133,7 +133,7 @@ export const handler = async (event) => {
       console.warn(`Configuration set "${configSet}" doesn't exist yet -- sending without it.`);
       try {
         await ses.send(new SendEmailCommand({
-          Source: "BIR Solutions Request <contact@birsolutions.net>",
+          Source: "BIR Solutions Request <request@birsolutions.net>",
           Destination: { ToAddresses: ["contact@birsolutions.net"] },
           ReplyToAddresses: [clientEmail],
           Message: messageFields,
