@@ -99,22 +99,54 @@ export const handler = async (event) => {
 
   const htmlBody = `<pre style="font-family: monospace; white-space: pre-wrap;">${escapeHtml(textBody)}</pre>`;
 
-  const command = new SendEmailCommand({
-    Source: "BIR Solutions Request <contact@birsolutions.net>",
-    Destination: { ToAddresses: ["contact@birsolutions.net"] },
-    ReplyToAddresses: [clientEmail],
-    Message: {
-      Subject: { Data: `New Website Intake Lead - ${clientName}`, Charset: "UTF-8" },
-      Body: {
-        Text: { Data: textBody, Charset: "UTF-8" },
-        Html: { Data: htmlBody, Charset: "UTF-8" },
-      },
+  const messageFields = {
+    Subject: { Data: `New Website Intake Lead - ${clientName}`, Charset: "UTF-8" },
+    Body: {
+      Text: { Data: textBody, Charset: "UTF-8" },
+      Html: { Data: htmlBody, Charset: "UTF-8" },
     },
-  });
+  };
+
+  // Without a Configuration Set, SES only exposes aggregate account-wide
+  // stats -- no way to see what happened to any specific message
+  // (delivered/bounced/complained). This name must match a real
+  // Configuration Set created in the SES console with an SNS event
+  // destination wired up -- see README.md "Delivery visibility". Unlike an
+  // unverified sender/recipient, SES does NOT silently ignore an
+  // unrecognized ConfigurationSetName -- it throws
+  // ConfigurationSetDoesNotExistException and the whole send fails. Caught
+  // specifically below so a delivery-visibility feature can never be the
+  // reason the actual contact form stops working, whether the set hasn't
+  // been created yet or its name ever drifts from what's configured here.
+  const configSet = process.env.SES_CONFIGURATION_SET || "birsolutions-contact-form";
 
   try {
-    await ses.send(command);
+    await ses.send(new SendEmailCommand({
+      Source: "BIR Solutions Request <contact@birsolutions.net>",
+      Destination: { ToAddresses: ["contact@birsolutions.net"] },
+      ReplyToAddresses: [clientEmail],
+      ConfigurationSetName: configSet,
+      Message: messageFields,
+    }));
   } catch (err) {
+    if (err.name === "ConfigurationSetDoesNotExistException") {
+      console.warn(`Configuration set "${configSet}" doesn't exist yet -- sending without it.`);
+      try {
+        await ses.send(new SendEmailCommand({
+          Source: "BIR Solutions Request <contact@birsolutions.net>",
+          Destination: { ToAddresses: ["contact@birsolutions.net"] },
+          ReplyToAddresses: [clientEmail],
+          Message: messageFields,
+        }));
+        return respond(200, { success: true });
+      } catch (fallbackErr) {
+        console.error("SES send failed (fallback, no configuration set):", fallbackErr);
+        return respond(502, {
+          success: false,
+          message: "Something went wrong sending your request. Please try again or email us directly.",
+        });
+      }
+    }
     console.error("SES send failed:", err);
     return respond(502, {
       success: false,

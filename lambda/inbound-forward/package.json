@@ -1,0 +1,11 @@
+{
+  "name": "birsolutions-inbound-forward-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda that forwards inbound birsolutions.net mail -- replaces ImprovMX.",
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/client-ses": "^3.600.0"
+  }
+}

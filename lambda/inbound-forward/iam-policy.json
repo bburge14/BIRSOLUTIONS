@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadStoredInboundMail",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::birsolutions-mail-storage/*"
+    },
+    {
+      "Sid": "ForwardViaSES",
+      "Effect": "Allow",
+      "Action": ["ses:SendRawEmail"],
+      "Resource": "*"
+    }
+  ]
+}
