@@ -32,7 +32,12 @@ const ses = new SESClient({ region: "us-east-2" });
 // --- CONFIGURATION ---
 const BUCKET_NAME = "birsolutions-mail-storage";
 const FROM_ADDRESS = "contact@birsolutions.net";
-const SENDER_NAME = "BIR Solutions Request";
+// The website contact form (lambda/contact-form) sends its notification
+// from this address -- forwarded copies of THOSE get a distinct display
+// name below so they're immediately recognizable as a new customer
+// request, not just any inbound mail.
+const FORM_SENDER_ADDRESS = "request@birsolutions.net";
+const FORM_DISPLAY_NAME = "BIRSolutions New Request";
 
 // Per-recipient overrides -- checked against every address this message
 // was actually sent to. Anything not listed here falls through to
@@ -51,6 +56,19 @@ function destinationFor(recipients) {
     if (match) return match;
   }
   return DEFAULT_FORWARD_TO;
+}
+
+function buildForwardedFrom(originalFromHeader) {
+  if (originalFromHeader.toLowerCase().includes(FORM_SENDER_ADDRESS)) {
+    return `"${FORM_DISPLAY_NAME}" <${FROM_ADDRESS}>`;
+  }
+  // Everything else: show the real sender's own name/address, tagged so
+  // it's still obvious this passed through our forwarder rather than
+  // looking like a direct, unfiltered email. Internal double-quotes
+  // swapped to single so they can't break out of the display-name
+  // quoting this gets wrapped in.
+  const label = originalFromHeader.replace(/"/g, "'");
+  return `"${label} (via BIRSolutions)" <${FROM_ADDRESS}>`;
 }
 
 export const handler = async (event) => {
@@ -76,7 +94,7 @@ export const handler = async (event) => {
     // recipient to be verified, which is a separate restriction).
     rawEmail = rawEmail.replace(
       /^From: .*/m,
-      `From: "${SENDER_NAME}" <${FROM_ADDRESS}>`
+      `From: ${buildForwardedFrom(originalSender)}`
     );
     rawEmail = rawEmail.replace(/^Sender: .*\r?\n/m, "");
     rawEmail = rawEmail.replace(/^Return-Path: .*\r?\n/m, "");
