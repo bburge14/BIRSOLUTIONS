@@ -80,6 +80,14 @@ export const handler = async (event) => {
     );
     rawEmail = rawEmail.replace(/^Sender: .*\r?\n/m, "");
     rawEmail = rawEmail.replace(/^Return-Path: .*\r?\n/m, "");
+    // DKIM-Signature is invalidated the moment any header it covers
+    // changes (From/Sender/Return-Path above all qualify), so it's stale
+    // regardless -- and SES's raw-send validation outright rejects a
+    // message with more than one instance ("Duplicate header
+    // 'DKIM-Signature'"), which legitimately happens when a message
+    // passed through more than one signing hop. Global + handles folded
+    // (multi-line) signature values, which DKIM-Signature almost always is.
+    rawEmail = rawEmail.replace(/^DKIM-Signature: .*(\r?\n[ \t].*)*\r?\n/gm, "");
 
     // Reply-To has to be removed and re-inserted INSIDE the header
     // block, not appended to the end of the whole raw message --
