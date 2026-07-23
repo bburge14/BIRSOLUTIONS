@@ -58,13 +58,25 @@ Sender -> MX (birsolutions.net) -> SES receiving
 
 ## Adding a new forwarding route
 
-Edit `FORWARD_ROUTES` in `index.mjs`, add a line, redeploy:
+Every message forwards to `AGENT_INBOX` (`burgeinfrastructureandrepair@gmail.com`)
+no matter what -- that's the mailbox birsolutions-intake-agent's IMAP
+polling (`EMAIL_ACCOUNTS`) watches to track/update tickets, so losing it
+for any address means the agent silently stops seeing that thread.
+
+`FORWARD_ROUTES` entries are **additional** destinations on top of
+`AGENT_INBOX`, not replacements -- this is what lets a BIR-Ticketing
+dashboard user's own birsolutions.net address (see bir_core.py's
+`users.email`) land in that person's personal inbox *and* still reach
+the agent. Edit `FORWARD_ROUTES` in `index.mjs`, add a line, redeploy:
 ```js
 const FORWARD_ROUTES = {
   "billing@birsolutions.net": "someone-else@example.com",
 };
 ```
-Anything not listed still falls through to `DEFAULT_FORWARD_TO`.
+Add one entry per dashboard user as they get a birsolutions.net address
+set up in their BIR-Ticketing profile, or replies they send from a
+ticket will still be tracked by the agent but never reach them
+personally.
 
 ## Debugging
 

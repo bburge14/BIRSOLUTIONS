@@ -39,23 +39,35 @@ const FROM_ADDRESS = "contact@birsolutions.net";
 const FORM_SENDER_ADDRESS = "requests@birsolutions.net";
 const FORM_DISPLAY_NAME = "BIRSolutions New Request";
 
-// Per-recipient overrides -- checked against every address this message
-// was actually sent to. Anything not listed here falls through to
-// DEFAULT_FORWARD_TO (today, that's everything -- this map starts empty).
-// When ready to split a specific address off to a different inbox, add
-// a line here, e.g.:
+// The main business inbox -- birsolutions-intake-agent's IMAP polling
+// (EMAIL_ACCOUNTS) watches this mailbox to track/update tickets, so
+// EVERY inbound message forwards here no matter who else it also goes
+// to below. Losing this destination for any address means the agent
+// silently stops seeing replies sent to/through that address.
+const AGENT_INBOX = "burgeinfrastructureandrepair@gmail.com";
+
+// Per-recipient ADDITIONS -- checked against every address this message
+// was actually sent to. These destinations are forwarded to IN ADDITION
+// TO AGENT_INBOX above, never instead of it -- a BIR-Ticketing dashboard
+// user's own birsolutions.net address (see bir_core.py users.email) goes
+// here so a customer's reply lands in that person's personal inbox too,
+// while the agent (which only ever polls AGENT_INBOX) still sees it and
+// keeps the ticket's Email Thread/status in sync. Add one line per
+// dashboard user's address as they're set up, e.g.:
 //   "billing@birsolutions.net": "someone-else@example.com",
 const FORWARD_ROUTES = {
-  // "specific@birsolutions.net": "destination@example.com",
+  // Bradey's own personal address -- replies also land in his personal
+  // Gmail, on top of the shared agent inbox above.
+  "bradey@birsolutions.net": "bradey.burge@gmail.com",
 };
-const DEFAULT_FORWARD_TO = "bradey.burge@gmail.com";
 
-function destinationFor(recipients) {
+function destinationsFor(recipients) {
+  const destinations = new Set([AGENT_INBOX]);
   for (const recipient of recipients) {
-    const match = FORWARD_ROUTES[recipient.toLowerCase()];
-    if (match) return match;
+    const extra = FORWARD_ROUTES[recipient.toLowerCase()];
+    if (extra) destinations.add(extra);
   }
-  return DEFAULT_FORWARD_TO;
+  return Array.from(destinations);
 }
 
 function buildForwardedFrom(originalFromHeader) {
@@ -74,7 +86,7 @@ function buildForwardedFrom(originalFromHeader) {
 export const handler = async (event) => {
   const record = event.Records[0].ses;
   const messageId = record.mail.messageId;
-  const forwardTo = destinationFor(record.receipt.recipients);
+  const forwardTo = destinationsFor(record.receipt.recipients);
 
   try {
     const s3Data = await s3.send(
@@ -125,11 +137,11 @@ export const handler = async (event) => {
       new SendRawEmailCommand({
         Source: FROM_ADDRESS, // explicit -- don't rely on inference from raw headers
         RawMessage: { Data: Buffer.from(rawEmail) },
-        Destinations: [forwardTo],
+        Destinations: forwardTo,
       })
     );
 
-    console.log(`Successfully forwarded message ${messageId} to ${forwardTo}`);
+    console.log(`Successfully forwarded message ${messageId} to ${forwardTo.join(", ")}`);
   } catch (err) {
     console.error("Error forwarding email:", err);
     throw err;
