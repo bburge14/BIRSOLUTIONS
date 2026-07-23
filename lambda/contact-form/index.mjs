@@ -148,7 +148,7 @@ export const handler = async (event) => {
 
   try {
     await sendWithConfigSetFallback({
-      Source: "BIR Solutions Request <requests@birsolutions.net>",
+      Source: "BIRSolutions Request <requests@birsolutions.net>",
       Destination: { ToAddresses: ["contact@birsolutions.net"] },
       ReplyToAddresses: [clientEmail],
       Message: {
@@ -176,8 +176,9 @@ export const handler = async (event) => {
     const replyBody = [
       `Hi ${clientName},`,
       "",
-      "Thanks for reaching out to BIR Solutions! We've received your " +
-        "request and a member of our team will review it shortly.",
+      "Thanks for reaching out to Burge Infrastructure & Repair! We've " +
+        "received your request and a member of our team will review it " +
+        "shortly.",
       "",
       "Here's a quick summary of what you submitted:",
       "",
@@ -190,7 +191,7 @@ export const handler = async (event) => {
         "details. If anything changes or you'd like to add more " +
         "information in the meantime, just reply directly to this email.",
       "",
-      "Thanks again for choosing BIR Solutions!",
+      "Thanks again for choosing Burge Infrastructure & Repair!",
     ].join("\n");
     const replyText = replyBody + FOOTER_TEXT;
     const replyHtml =
@@ -202,7 +203,7 @@ export const handler = async (event) => {
       Destination: { ToAddresses: [clientEmail] },
       ReplyToAddresses: ["contact@birsolutions.net"],
       Message: {
-        Subject: { Data: "We've received your request - BIR Solutions", Charset: "UTF-8" },
+        Subject: { Data: "We've received your request - BIRSolutions", Charset: "UTF-8" },
         Body: {
           Text: { Data: replyText, Charset: "UTF-8" },
           Html: { Data: replyHtml, Charset: "UTF-8" },
