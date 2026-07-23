@@ -1075,6 +1075,28 @@
       if (group) group.classList.toggle('has-error', hasError);
     }
 
+    /* Formats to (###) ###-#### as the customer types. Accepts an 11-digit
+       entry with a leading US country code (1) and drops it -- the stored/
+       sent value is always the plain 10-digit format, never "+1 (...)". */
+    function formatPhoneNumber(value) {
+      var digits = value.replace(/\D/g, '').slice(0, 11);
+      if (digits.length === 11 && digits[0] === '1') {
+        digits = digits.slice(1);
+      }
+      digits = digits.slice(0, 10);
+      if (digits.length === 0) return '';
+      if (digits.length < 4) return '(' + digits;
+      if (digits.length < 7) return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+      return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+    }
+
+    var phoneField = form.elements.phone;
+    if (phoneField) {
+      phoneField.addEventListener('input', function () {
+        phoneField.value = formatPhoneNumber(phoneField.value);
+      });
+    }
+
     function validateField(name, value) {
       var isValid = validators[name] ? validators[name](value) : true;
       setFieldError(name, !isValid);
