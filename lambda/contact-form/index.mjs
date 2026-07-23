@@ -33,6 +33,21 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://birsolutions.net";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Generic branded footer for customer-facing mail sent from a non-personal
+// address (noreply@, and any other generic BIRSolutions identity later).
+// Logo is linked, not attached -- it already lives in this repo and is
+// served live at this exact path via GitHub Pages (see index.html, which
+// uses the same file for its own header/footer), so there's no need to
+// duplicate it as a MIME attachment.
+const FOOTER_TEXT = "\n\n--\nBurge Infrastructure & Repair\nbirsolutions.net";
+const FOOTER_HTML = `
+  <div style="margin-top:24px;padding-top:16px;border-top:1px solid #ddd;font-family:sans-serif;">
+    <img src="https://birsolutions.net/BIR_Final_Official_Branding.png" alt="Burge Infrastructure & Repair" style="height:48px;width:auto;display:block;margin-bottom:8px;">
+    <div style="font-weight:bold;color:#111;">Burge Infrastructure &amp; Repair</div>
+    <div style="color:#555;"><a href="https://birsolutions.net" style="color:#555;text-decoration:none;">birsolutions.net</a></div>
+  </div>
+`;
+
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
@@ -158,7 +173,7 @@ export const handler = async (event) => {
   // smaller problem than making them think their submission didn't go
   // through when it actually did.
   try {
-    const replyText = [
+    const replyBody = [
       `Hi ${clientName},`,
       "",
       "Thanks for reaching out to BIR Solutions! We've received your " +
@@ -179,7 +194,10 @@ export const handler = async (event) => {
       "",
       "The BIR Solutions Team",
     ].join("\n");
-    const replyHtml = `<pre style="font-family: inherit; white-space: pre-wrap;">${escapeHtml(replyText)}</pre>`;
+    const replyText = replyBody + FOOTER_TEXT;
+    const replyHtml =
+      `<pre style="font-family: inherit; white-space: pre-wrap;">${escapeHtml(replyBody)}</pre>` +
+      FOOTER_HTML;
 
     await sendWithConfigSetFallback({
       Source: "BIRSolutions <noreply@birsolutions.net>",
