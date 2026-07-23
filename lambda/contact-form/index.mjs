@@ -133,7 +133,7 @@ export const handler = async (event) => {
 
   try {
     await sendWithConfigSetFallback({
-      Source: "BIR Solutions Request <request@birsolutions.net>",
+      Source: "BIR Solutions Request <requests@birsolutions.net>",
       Destination: { ToAddresses: ["contact@birsolutions.net"] },
       ReplyToAddresses: [clientEmail],
       Message: {
@@ -182,7 +182,7 @@ export const handler = async (event) => {
     const replyHtml = `<pre style="font-family: inherit; white-space: pre-wrap;">${escapeHtml(replyText)}</pre>`;
 
     await sendWithConfigSetFallback({
-      Source: "BIR Solutions <noreply@birsolutions.net>",
+      Source: "BIRSolutions <noreply@birsolutions.net>",
       Destination: { ToAddresses: [clientEmail] },
       ReplyToAddresses: ["contact@birsolutions.net"],
       Message: {

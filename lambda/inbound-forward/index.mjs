@@ -36,7 +36,7 @@ const FROM_ADDRESS = "contact@birsolutions.net";
 // from this address -- forwarded copies of THOSE get a distinct display
 // name below so they're immediately recognizable as a new customer
 // request, not just any inbound mail.
-const FORM_SENDER_ADDRESS = "request@birsolutions.net";
+const FORM_SENDER_ADDRESS = "requests@birsolutions.net";
 const FORM_DISPLAY_NAME = "BIRSolutions New Request";
 
 // Per-recipient overrides -- checked against every address this message
