@@ -191,8 +191,6 @@ export const handler = async (event) => {
         "information in the meantime, just reply directly to this email.",
       "",
       "Thanks again for choosing BIR Solutions!",
-      "",
-      "The BIR Solutions Team",
     ].join("\n");
     const replyText = replyBody + FOOTER_TEXT;
     const replyHtml =
